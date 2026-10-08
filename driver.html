@@ -1,27 +1,44 @@
-<!-- DRIVER PANEL - Only you see it with ?driver=1 -->
-<div id="driverPanel" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#000;border-top:2px solid #ffc107;padding:12px;z-index:9999;">
-  <b style="color:#ffc107;">🚛 DRIVER CONTROL - ARM-02</b><br>
-  <button onclick="setDriverStatus('STOPPED')" style="background:#ff3d00;color:#fff;padding:10px 15px;border-radius:20px;border:none;margin:5px;font-weight:900;">🛑 STOPPED / PARKED</button>
-  <button onclick="setDriverStatus('LIVE MOVING')" style="background:#00e676;color:#000;padding:10px 15px;border-radius:20px;border:none;margin:5px;font-weight:900;">▶️ RESUME MOVING</button>
-  <button onclick="setDriverStatus('ARRIVED DURBAN')" style="background:#ffc107;color:#000;padding:10px 15px;border-radius:20px;border:none;margin:5px;font-weight:900;">✅ ARRIVED</button>
-  <button onclick="setDriverStatus('EMERGENCY')" style="background:#d50000;color:#fff;padding:10px 15px;border-radius:20px;border:none;margin:5px;font-weight:900;">🚨 EMERGENCY</button>
+<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>XANDROS LIVE TRACKING</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><style>*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}body{background:#060d1a;color:#fff}#top{background:#0a1628;padding:12px;border-left:4px solid #00e676;font-size:13px;line-height:1.4}#map{height:75vh;width:100%}.leaflet-control{font-size:11px}</style></head><body>
+
+<div id="top">
+<b>Pretoria → Durban • 100KG Rhodium 99.99%</b><br>
+🚛 ARM-02 <span id="speed">85 km/h</span> | <span id="status" style="color:#00e676;font-weight:900;">● LIVE MOVING - N3 Highway</span><br>
+<span id="ping">Last Ping: 10:11:56 SAST | ETA Durban: 4h 51m | 3.2% | SIGNAL STRONG</span>
 </div>
+
+<div id="map"></div>
+
+<!-- DRIVER CONTROL - ONLY YOU SEE WITH ?driver=1 -->
+<div id="driverPanel" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#000;border-top:3px solid #ffc107;padding:15px;z-index:9999;text-align:center;">
+<b style="color:#ffc107;">🚛 DRIVER CONTROL - ARM-02 (Only you see this)</b><br><br>
+<button onclick="setS('STOPPED - N3 HEIDELBERG - PARKED')" style="background:#ff3d00;color:#fff;padding:12px 18px;border-radius:25px;border:none;margin:4px;font-weight:900;">🛑 STOPPED / PARKED</button>
+<button onclick="setS('LIVE MOVING - N3 Highway')" style="background:#00e676;color:#000;padding:12px 18px;border-radius:25px;border:none;margin:4px;font-weight:900;">▶️ RESUME MOVING</button>
+<button onclick="setS('ARRIVED DURBAN - SECURE VAULT - DELIVERED ✅')" style="background:#ffc107;color:#000;padding:12px 18px;border-radius:25px;border:none;margin:4px;font-weight:900;">✅ ARRIVED DURBAN</button>
+</div>
+
 <script>
-// Show driver panel if ?driver=1 in URL
-if(window.location.href.includes('driver=1')){document.getElementById('driverPanel').style.display='block';}
-function setDriverStatus(s){
+// MAP SETUP
+var map = L.map('map').setView([-26.5, 29.5], 6);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+var pretoria = [-25.7479, 28.2293]; var durban = [-29.8587, 31.0218];
+L.polyline([pretoria, [-26.5, 28.8], [-27.8, 29.5], durban], {color:'#ffc107', weight:3, dashArray:'10,10'}).addTo(map);
+var truckIcon = L.divIcon({html:'🚚', className:'', iconSize:[30,30]});
+var marker = L.marker(pretoria, {icon:truckIcon}).addTo(map);
+L.marker(durban).addTo(map).bindPopup("Durban Vault");
+
+// DRIVER LOGIC
+if(window.location.href.includes('driver=1')) document.getElementById('driverPanel').style.display='block';
+function setS(s){
   localStorage.setItem('xandros_status', s);
-  localStorage.setItem('xandros_lastPing', new Date().toLocaleTimeString('en-ZA')+' SAST');
-  alert('Status set to: '+s+'\nClient will see: '+s);
-  location.reload();
+  localStorage.setItem('xandros_speed', s.includes('STOPPED')?'0 km/h - PARKED': s.includes('ARRIVED')?'0 km/h - DELIVERED':'85 km/h');
+  localStorage.setItem('xandros_time', new Date().toLocaleTimeString('en-ZA',{hour12:false})+' SAST');
+  localStorage.setItem('xandros_eta', s.includes('ARRIVED')?'DELIVERED' : '4h 51m');
+  alert('✅ Set to: '+s); location.reload();
 }
-// Read driver status
-let saved = localStorage.getItem('xandros_status');
-if(saved){ 
-  // Override the text that shows LIVE MOVING
-  setTimeout(()=>{
-    document.body.innerHTML = document.body.innerHTML.replace(/LIVE MOVING/g, saved);
-    if(saved=='STOPPED') document.body.innerHTML = document.body.innerHTML.replace(/85 km\/h/g, '0 km/h - PARKED');
-  },500);
-}
+// Load saved
+let st=localStorage.getItem('xandros_status'); let sp=localStorage.getItem('xandros_speed'); let tm=localStorage.getItem('xandros_time');
+if(st){document.getElementById('status').innerText='● '+st; document.getElementById('status').style.color=st.includes('STOPPED')?'#ff3d00': st.includes('ARRIVED')?'#ffc107':'#00e676';}
+if(sp){document.getElementById('speed').innerText=sp;}
+if(tm){document.getElementById('ping').innerText='Last Ping: '+tm+' | ETA Durban: '+(localStorage.getItem('xandros_eta')||'4h 51m')+' | SIGNAL STRONG';}
 </script>
+</body></html>
