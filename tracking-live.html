@@ -1,26 +1,78 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>XANDROS LIVE</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><style>*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}body{background:#060d1a;color:#fff}#top{background:#0a1628;padding:12px;border-left:4px solid #00e676;font-size:13px;line-height:1.5}#map{height:65vh;width:100%}</style></head><body>
-<div id="top">
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>WB-XL-2026-0930-001 | LIVE TRACKING</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#000;color:#fff}
+#header{background:#0a1931;padding:10px 12px;border-bottom:3px solid #ffcc00}
+#statusLine{font-weight:bold;font-size:15px;margin-top:4px}
+.live{color:#00ff88}.stopped{color:#ff4444}
+#map{height:62vh;width:100%}
+#driverBar{background:#111;border-top:3px solid #ffcc00;padding:12px;text-align:center}
+.btn{border:none;border-radius:28px;padding:14px 24px;font-weight:bold;font-size:16px;margin:6px;cursor:pointer;min-width:150px}
+.stop{background:#ff3b30;color:#fff}.resume{background:#00d084;color:#000}.delivered{background:#ffcc00;color:#000}
+#info{background:#0a1931;padding:8px 12px;font-size:13px;display:flex;justify-content:space-between}
+</style>
+</head>
+<body>
+<div id="header">
 <b>WB-XL-2026-0930-001 | CHRIST NAIDOO</b><br>
-Pretoria → Durban • 100KG Rhodium 99.99%<br>
-🚛 ARM-02 <span id="speed">74 km/h</span> | <span id="status" style="color:#00e676;font-weight:900;">● LIVE MOVING - N3 Highway</span><br>
-<span id="ping">Last Ping: NOW | ETA Durban: 4h 58m | SIGNAL STRONG</span>
+Pretoria → Durban • 100KG Rhodium 99.99% • ARM-02
+<div id="statusLine"><span id="sText">LOADING...</span> | <span id="speedText">0 km/h</span> | <span id="lastPing">Last Ping: --</span></div>
+<div style="font-size:12px;margin-top:2px">ETA Durban: <span id="eta">--</span> | SIGNAL: <span style="color:#00ff88">STRONG</span> • DIST: <span id="dist">--</span></div>
 </div>
 <div id="map"></div>
-<div id="driverPanel" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#000;border-top:3px solid #ffc107;padding:15px;z-index:9999;text-align:center;">
-<b style="color:#ffc107;">🚛 DRIVER ARM-02 - TAP TO STOP</b><br><br>
-<button onclick="setS('STOPPED - PARKED N3')" style="background:#ff3d00;color:#fff;padding:14px 20px;border-radius:25px;border:none;margin:5px;font-weight:900;font-size:15px;">🛑 STOP TRUCK</button>
-<button onclick="setS('LIVE MOVING - N3 Highway')" style="background:#00e676;color:#000;padding:14px 20px;border-radius:25px;border:none;margin:5px;font-weight:900;font-size:15px;">▶️ RESUME</button>
-<button onclick="setS('ARRIVED DURBAN - DELIVERED ✅')" style="background:#ffc107;color:#000;padding:14px 20px;border-radius:25px;border:none;margin:5px;font-weight:900;font-size:15px;">✅ DELIVERED</button>
+<div id="info">
+<span>TRUCK: ARM-02</span><span id="progressText">0% COMPLETE</span><span id="modeText">AUTO-DRIVE</span>
+</div>
+<div id="driverBar" style="display:none">
+<div style="color:#ffcc00;font-weight:bold;margin-bottom:8px">🚛 DRIVER ARM-02 - TAP TO CONTROL</div>
+<button class="btn stop" onclick="setStatus('STOPPED_N3')">🛑 STOP TRUCK</button>
+<button class="btn resume" onclick="setStatus('MOVING')">▶️ RESUME</button>
+<button class="btn delivered" onclick="setStatus('DELIVERED')">✅ DELIVERED</button>
+<div style="font-size:11px;margin-top:8px;color:#aaa">Driver Mode Active</div>
 </div>
 <script>
-var map=L.map('map').setView([-26.5,29.5],6);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-var pretoria=[-25.7479,28.2293];var durban=[-29.8587,31.0218];
-L.polyline([pretoria,[-26.5,28.8],[-27.8,29.5],durban],{color:'#ffc107',weight:3,dashArray:'10,10'}).addTo(map);
-var truckIcon=L.divIcon({html:'🚚',className:'',iconSize:[30,30]});var marker=L.marker(pretoria,{icon:truckIcon}).addTo(map);L.marker(durban).addTo(map);
-if(window.location.href.includes('driver=1'))document.getElementById('driverPanel').style.display='block';
-function setS(s){localStorage.setItem('xandros_status',s);localStorage.setItem('xandros_speed',s.includes('STOPPED')?'0 km/h - PARKED':s.includes('ARRIVED')?'0 km/h - DELIVERED':'77 km/h');localStorage.setItem('xandros_time',new Date().toLocaleTimeString('en-ZA',{hour12:false})+' SAST');alert('✅ Set to: '+s);location.reload();}
-let st=localStorage.getItem('xandros_status');let sp=localStorage.getItem('xandros_speed');let tm=localStorage.getItem('xandros_time');
-if(st){document.getElementById('status').innerText='● '+st;document.getElementById('status').style.color=st.includes('STOPPED')?'#ff3d00':st.includes('ARRIVED')?'#ffc107':'#00e676';}
-if(sp){document.getElementById('speed').innerText=sp;}
-if(tm){document.getElementById('ping').innerText='Last Ping: '+tm+' | '+ (st.includes('ARRIVED')?'DELIVERED':'ETA Durban: 4h 58m')+' | SIGNAL STRONG';}
-</script></body></html>
+const route = [[-25.7479,28.2293],[-26.0,28.5],[-26.2,28.8],[-26.4,29.1],[-26.6,29.4],[-26.8,29.6],[-27.0,29.9],[-27.3,30.0],[-27.6,30.2],[-28.0,30.3],[-28.4,30.2],[-28.8,30.1],[-29.1,30.2],[-29.4,30.3],[-29.7,30.6],[-29.85,31.02]];
+const params = new URLSearchParams(window.location.search);
+const isDriver = params.has('driver');
+const forcedStatus = params.get('status');
+if(isDriver) document.getElementById('driverBar').style.display='block';
+let state = localStorage.getItem('xandros_state') || 'MOVING';
+if(forcedStatus) state = forcedStatus;
+let progress = parseFloat(localStorage.getItem('xandros_progress') || '0');
+let speed = 77; let isStopped = false;
+const map = L.map('map').setView(route[0], 6);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+L.polyline(route, {color:'#ffcc00', weight:4, dashArray:'10,10'}).addTo(map);
+const truckIcon = L.divIcon({html:'<div style="font-size:28px">🚛</div>', iconSize:[30,30], className:''});
+let marker = L.marker(route[0], {icon: truckIcon}).addTo(map);
+function updateHeader(){
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('en-ZA',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) + ' SAST';
+  document.getElementById('lastPing').innerText = 'Last Ping: ' + timeStr;
+  if(state==='STOPPED_N3'){isStopped=true;speed=0;document.getElementById('sText').innerHTML='<span class="stopped">🔴 STOPPED - PARKED N3</span>';document.getElementById('speedText').innerText='0 km/h - PARKED';document.getElementById('modeText').innerText='PARKED';}
+  else if(state==='DELIVERED'){isStopped=true;speed=0;progress=1;document.getElementById('sText').innerHTML='<span style="color:#ffcc00">✅ DELIVERED DURBAN</span>';document.getElementById('speedText').innerText='0 km/h - DELIVERED';document.getElementById('modeText').innerText='DELIVERED';document.getElementById('eta').innerText='ARRIVED';}
+  else {isStopped=false;speed=72+Math.floor(Math.random()*12);document.getElementById('sText').innerHTML='<span class="live">🟢 LIVE MOVING - N3 Highway</span>';document.getElementById('speedText').innerText=speed+' km/h';document.getElementById('modeText').innerText='AUTO-DRIVE';}
+  if(!isStopped && state!=='DELIVERED'){let remaining=(1-progress)*8;let h=Math.floor(remaining);let m=Math.floor((remaining-h)*60);document.getElementById('eta').innerText=h+'h '+m+'m';document.getElementById('dist').innerText=Math.round((1-progress)*620)+'km left';document.getElementById('progressText').innerText=Math.round(progress*100)+'% COMPLETE';}
+}
+function setStatus(newStatus){
+  state=newStatus;localStorage.setItem('xandros_state',newStatus);localStorage.setItem('xandros_progress',progress.toString());
+  const shareLink=window.location.origin+window.location.pathname+'?status='+newStatus;
+  alert('✅ Set to: '+newStatus+'\n\nCLIENT LINK TO SEND:\n'+shareLink+'\n\nSend this to Christ Naidoo');
+  location.href=window.location.pathname+'?driver=1&status='+newStatus;
+}
+function animate(){
+  if(!isStopped && state==='MOVING'){progress+=0.0003;if(progress>=1){progress=1;setStatus('DELIVERED');return;}localStorage.setItem('xandros_progress',progress.toString());let total=route.length-1;let idx=progress*total;let i=Math.floor(idx);let frac=idx-i;if(i>=total) i=total-1,frac=1;let lat=route[i][0]+(route[i+1][0]-route[i][0])*frac;let lng=route[i][1]+(route[i+1][1]-route[i][1])*frac;marker.setLatLng([lat,lng]);map.panTo([lat,lng],{animate:true,duration:1});}
+  updateHeader();
+}
+setInterval(animate,1000);updateHeader();
+(function initPos(){let total=route.length-1;let idx=progress*total;let i=Math.floor(idx);let frac=idx-i;if(i>=total) return;let lat=route[i][0]+(route[i+1][0]-route[i][0])*frac;let lng=route[i][1]+(route[i+1][1]-route[i][1])*frac;marker.setLatLng([lat,lng]);map.setView([lat,lng],7);})();
+</script>
+</body>
+</html>
